@@ -21,7 +21,7 @@ const HomePage: React.FC<HomePageProps> = ({ onStartClick }) => {
       const sessionId = Date.now().toString();
       
       // Call backend to analyze YouTube video
-      const response = await fetch('http://localhost:4000/api/vibelytube/analyze', {
+      const response = await fetch(`${process.env.BACKEND_URL}/api/vibelytube/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

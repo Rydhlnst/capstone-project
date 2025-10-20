@@ -46,7 +46,7 @@ const BelajarBotSidebar: React.FC<ChatBotSidebarProps> = ({
     
     try {
       // Call API to backend
-      const response = await fetch('http://localhost:4000/api/vibelytube/chat', {
+      const response = await fetch(`${process.env.BACKEND_URL}/api/vibelytube/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

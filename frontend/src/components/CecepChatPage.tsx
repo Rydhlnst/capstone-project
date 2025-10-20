@@ -84,7 +84,7 @@ const CecepChatPage: React.FC<CecepChatPageProps> = ({ onBackClick, initialVideo
       console.log('🚀 Cecep mengirim request dengan data:', requestData);
 
       // Send to backend for contextual response
-      const response = await fetch('http://localhost:4000/api/vibelytube/chat', {
+      const response = await fetch(`${process.env.BACKEND_URL}/api/vibelytube/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -8,7 +8,7 @@ export default defineConfig({
     strictPort: false, // Allow fallback to next available port if 3001 is busy
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: `${process.env.BACKEND_URL}`,
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path, // Tidak melakukan rewrite untuk memastikan path /api tetap
