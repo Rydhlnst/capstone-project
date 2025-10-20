@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Send, ArrowLeft } from 'lucide-react';
 import './CecepChatPage.css';
 
 interface ChatMessage {

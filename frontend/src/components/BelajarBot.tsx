@@ -14,7 +14,7 @@ interface ChatBotProps {
   sessionId?: string;
 }
 
-const BelajarBot: React.FC<ChatBotProps> = ({ videoTitle = 'Video Yang Dianalisis', onClose, onMinimize, sessionId }) => {
+const BelajarBot: React.FC<ChatBotProps> = ({ videoTitle = 'Video Yang Dianalisis', onClose, onMinimize }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { sender: 'bot', text: 'Hai! Aku Siti Khadijah, AI assistant yang siap membantumu memahami video ini. Mau tanya apa tentang video yang sudah dianalisis?' }
   ]);
