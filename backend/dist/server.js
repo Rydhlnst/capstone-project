@@ -29,7 +29,7 @@ console.log('🔍 Environment variables loaded:', {
 });
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 4000;
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', process.env.CORS_ORIGIN];
 if (process.env.CORS_ORIGIN) {
     allowedOrigins.push(process.env.CORS_ORIGIN);
 }
