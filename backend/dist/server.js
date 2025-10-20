@@ -10,7 +10,16 @@ const path_1 = __importDefault(require("path"));
 const vibelytube_1 = __importDefault(require("./routes/vibelytube"));
 const databaseService_1 = require("./services/databaseService");
 const prisma_1 = __importDefault(require("./lib/prisma"));
-dotenv_1.default.config({ path: path_1.default.resolve(__dirname, '../.env') });
+const envPath = path_1.default.resolve(__dirname, '../.env');
+console.log(`🔍 Loading .env from: ${envPath}`);
+dotenv_1.default.config({ path: envPath });
+console.log('🔍 Environment variables check:', {
+    NODE_ENV: process.env.NODE_ENV,
+    PORT: process.env.PORT,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY ? `${process.env.OPENAI_API_KEY.substring(0, 10)}...` : 'NOT_FOUND',
+    OPENAI_BASE_URL: process.env.OPENAI_BASE_URL || 'NOT_FOUND',
+    YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY ? `${process.env.YOUTUBE_API_KEY.substring(0, 15)}...` : 'NOT_FOUND'
+});
 console.log('🔍 Environment variables loaded:', {
     NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
@@ -20,8 +29,12 @@ console.log('🔍 Environment variables loaded:', {
 });
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 4000;
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+if (process.env.CORS_ORIGIN) {
+    allowedOrigins.push(process.env.CORS_ORIGIN);
+}
 app.use((0, cors_1.default)({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(express_1.default.json({ limit: '50mb' }));

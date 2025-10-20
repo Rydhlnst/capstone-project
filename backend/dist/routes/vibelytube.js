@@ -8,8 +8,15 @@ const multer_1 = __importDefault(require("multer"));
 const youtubeService_1 = require("../services/youtubeService");
 const chatService_1 = require("../services/chatService");
 const router = express_1.default.Router();
-const youtubeService = new youtubeService_1.YouTubeService();
-const chatService = new chatService_1.ChatService();
+let youtubeService;
+let chatService;
+function initializeServices() {
+    if (!youtubeService) {
+        console.log('🔄 Initializing services with environment variables...');
+        youtubeService = new youtubeService_1.YouTubeService();
+        chatService = new chatService_1.ChatService();
+    }
+}
 const sessions = new Map();
 const upload = (0, multer_1.default)({
     dest: 'uploads/',
@@ -29,6 +36,7 @@ const upload = (0, multer_1.default)({
 });
 router.post('/analyze', async (req, res) => {
     try {
+        initializeServices();
         const { url, sessionId } = req.body;
         if (!url || !sessionId) {
             return res.status(400).json({
@@ -40,17 +48,25 @@ router.post('/analyze', async (req, res) => {
         const analysis = await youtubeService.analyzeVideo(url);
         if (!sessions.has(sessionId)) {
             sessions.set(sessionId, { conversationHistory: [], analyses: [] });
+            console.log(`🆕 Created new session: ${sessionId}`);
         }
         const session = sessions.get(sessionId);
-        session.analyses.push({
-            id: `analysis_${Date.now()}`,
+        const analysisId = `analysis_${Date.now()}`;
+        const analysisData = {
+            id: analysisId,
             ...analysis,
             analyzedAt: new Date().toISOString()
-        });
+        };
+        session.analyses.push(analysisData);
+        console.log(`💾 Stored analysis in session:`);
+        console.log(`   - Analysis ID: ${analysisId}`);
+        console.log(`   - Video title: ${analysis.title}`);
+        console.log(`   - Transcript length: ${analysis.transcript?.length || 0}`);
+        console.log(`   - Total analyses in session: ${session.analyses.length}`);
         console.log(`✅ YouTube analysis completed for session: ${sessionId}`);
         console.log(`📊 Analysis result - Title: ${analysis.title}`);
         const responseData = {
-            id: `analysis_${Date.now()}`,
+            id: analysisId,
             title: analysis.title,
             description: analysis.description,
             duration: analysis.duration,
@@ -79,6 +95,7 @@ router.post('/analyze', async (req, res) => {
 });
 router.post('/chat', async (req, res) => {
     try {
+        initializeServices();
         const { message, sessionId, analysisId } = req.body;
         if (!message || !sessionId) {
             return res.status(400).json({
@@ -87,33 +104,59 @@ router.post('/chat', async (req, res) => {
             });
         }
         console.log(`💬 Processing chat message for session: ${sessionId}`);
+        console.log(`📄 Analysis ID provided: ${analysisId}`);
+        console.log(`💭 User message: ${message}`);
         if (!sessions.has(sessionId)) {
+            console.log(`🆕 Creating new session: ${sessionId}`);
             sessions.set(sessionId, { conversationHistory: [], analyses: [] });
         }
         const session = sessions.get(sessionId);
         let conversationHistory = session.conversationHistory || [];
+        console.log(`📊 Session info:`);
+        console.log(`   - Total analyses: ${session.analyses.length}`);
+        console.log(`   - Available analysis IDs: [${session.analyses.map((a) => a.id).join(', ')}]`);
+        console.log(`   - Looking for analysis ID: ${analysisId}`);
         if (analysisId) {
             console.log(`📄 Including analysis context: ${analysisId}`);
-            const analysis = session.analyses.find((a) => a.id === analysisId);
+            console.log(`📊 Session analyses count: ${session.analyses.length}`);
+            let analysis = session.analyses.find((a) => a.id === analysisId);
+            if (!analysis && session.analyses.length > 0) {
+                analysis = session.analyses[session.analyses.length - 1];
+                console.log(`🔄 Using latest analysis as fallback: ${analysis.id}`);
+            }
+            console.log(`🔍 Found analysis: ${!!analysis}`);
             if (analysis) {
+                console.log(`📹 Video title: ${analysis.title}`);
+                console.log(`📝 Transcript length: ${analysis.transcript?.length || 0}`);
                 const systemMessage = {
                     role: 'system',
-                    content: `Kamu sedang membahas video YouTube berikut:
+                    content: `Kamu adalah Cecep, chatbot yang santai dan casual. Kamu sedang membahas video YouTube berikut:
           
 Judul: ${analysis.title}
 Channel: ${analysis.channelTitle || 'Tidak diketahui'}
 Durasi: ${analysis.duration}
-Deskripsi: ${analysis.description}
+Deskripsi: ${analysis.description || 'Tidak ada deskripsi'}
 
 ${analysis.transcript ? `Transkrip lengkap video:
 ${analysis.transcript}` : 'Transkrip tidak tersedia.'}
 
-Gunakan informasi ini untuk menjawab pertanyaan pengguna tentang video ini. Berikan jawaban yang informatif dan detail berdasarkan konten video.`
+PENTING: Gunakan kepribadian Cecep yang santai, casual, dan ramah. Gunakan bahasa gaul Indonesia dan jawab berdasarkan konten video di atas. Jangan gunakan fallback response umum. Selalu merujuk ke isi video yang sudah kamu analisis.`
                 };
+                console.log(`📋 System message content preview: ${systemMessage.content.substring(0, 200)}...`);
                 if (!conversationHistory.some((msg) => msg.role === 'system' && msg.content.includes(analysis.title))) {
                     conversationHistory.unshift(systemMessage);
+                    console.log(`✅ Added system message to conversation`);
+                }
+                else {
+                    console.log(`⚠️ System message already exists in conversation`);
                 }
             }
+            else {
+                console.log(`❌ Analysis not found in session. Available analyses:`, session.analyses.map((a) => a.id));
+            }
+        }
+        else {
+            console.log(`⚠️ No analysisId provided in chat request`);
         }
         const userMessage = { role: 'user', content: message };
         conversationHistory.push(userMessage);
